@@ -1,0 +1,115 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["mongodb"]
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String               @id @default(auto()) @map("_id") @db.ObjectId
+  email              String               @unique
+  name               String
+  password           String
+  role               UserRole             @default(USER)
+  status             UserStatus           @default(ACTIVE)
+  isDeleted          Boolean              @default(false)
+  profilePhoto       String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  userProfile        UserProfile?
+  Trip               Trip[]
+  TravelBuddyRequest TravelBuddyRequest[]
+
+  @@map("users")
+}
+
+model UserProfile {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @unique @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  bio       String
+  age       Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("userProfile")
+}
+
+model Trip {
+  id                 String               @id @default(auto()) @map("_id") @db.ObjectId
+  userId             String               @db.ObjectId
+  destination        String
+  description        String               @default("")
+  startDate          String
+  endDate            String
+  budget             Float
+  status             Boolean              @default(false)
+  activities         String[]
+  itinerary          String[]
+  photos             String[]
+  travelType         String               @default("")
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  user               User                 @relation(fields: [userId], references: [id])
+  TravelBuddyRequest TravelBuddyRequest[]
+
+  @@map("trip")
+}
+
+model TravelBuddyRequest {
+  id        String                   @id @default(auto()) @map("_id") @db.ObjectId
+  tripId    String                   @db.ObjectId
+  userId    String                   @db.ObjectId
+  status    TravelBuddyRequestStatus @default(PENDING)
+  createdAt DateTime                 @default(now())
+  updatedAt DateTime                 @updatedAt
+
+  trip Trip @relation(fields: [tripId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("travelBuddyRequest")
+}
+
+model Contact {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  email       String
+  phoneNumber String
+  message     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("contacts")
+}
+
+model Team {
+  id           String  @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  designation  String
+  profilePhoto String?
+  facebookURL  String?
+  instagramURL String?
+  linkedinURL  String?
+
+  @@map("teams")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  USER
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+}
+
+enum TravelBuddyRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
